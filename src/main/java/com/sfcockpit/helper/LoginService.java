@@ -68,7 +68,7 @@ public class LoginService  {
         .build();
         HttpClient client = HttpClient.newBuilder().build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        System.out.println(response.body());
+     //   System.out.println(response.body());
 
         if (response.statusCode() != 200) {
             throw new InterruptedException("API error: " + response.body());

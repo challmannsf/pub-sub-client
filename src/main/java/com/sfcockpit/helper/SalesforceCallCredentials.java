@@ -5,8 +5,12 @@ import java.util.concurrent.Executor;
 import io.grpc.CallCredentials;
 import io.grpc.Metadata;
 
+/**
+ * Please refer to https://developer.salesforce.com/docs/platform/pub-sub-api/guide/rpc-method-headers.html
+ * for a documentation
+ * The call credentials are specific to salesforce pub sub api
+ */
 public class SalesforceCallCredentials extends CallCredentials {
-
 
     private String instanceURL;
     private String accessToken;
