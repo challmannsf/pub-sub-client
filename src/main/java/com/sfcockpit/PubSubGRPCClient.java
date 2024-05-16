@@ -14,29 +14,22 @@ import com.sfcockpit.helper.LoginService.LoginServiceException;
 
 public class PubSubGRPCClient {
 
-    private final PubSubGrpc.PubSubBlockingStub pubSubBlockingStub;
     private final PubSubGrpc.PubSubStub pubSubAsyncStub; 
+    private final PubSubGrpc.PubSubBlockingStub pubSubBlockingStub; 
     private final ManagedChannel channel;
-
     private final StreamObserver<FetchResponse> responseStreamObserver;
-
     private final String pubSubHost = "api.pubsub.salesforce.com";
     private final int pubSubPort = 7443;
 
-    public PubSubGRPCClient() throws IOException, InterruptedException, LoginServiceException {
-        this.channel = ManagedChannelBuilder.forAddress(this.pubSubHost, this.pubSubPort).build();
+    private Boolean keepAlive = true;
 
-        // TODO
-        ConfigurationService config = new ConfigurationService("exampleConfiguration.yaml");
+    public PubSubGRPCClient(String configurationFileName) throws IOException, InterruptedException, LoginServiceException {
+        this.channel = ManagedChannelBuilder.forAddress(this.pubSubHost, this.pubSubPort).build();
+        ConfigurationService config = new ConfigurationService(configurationFileName);
         CallCredentials callCredentials = new LoginService(config).login();
         this.pubSubAsyncStub = PubSubGrpc.newStub(channel).withCallCredentials(callCredentials);
         this.pubSubBlockingStub = PubSubGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
-        this.responseStreamObserver = new ResponseStreamObserverImplementation();
-
-        // TEST 
-        this.setTopicInfo();
-        this.subscribe();
-
+        this.responseStreamObserver = new ResponseStreamObserverImplementation(this.pubSubBlockingStub);    
     }
 
     public void waitInMillis(long duration) {
@@ -52,23 +45,28 @@ public class PubSubGRPCClient {
     /**
      * Subscribe and listen to a specified topic
      */
-    public void subscribe() {
+    public void subscribe(String eventName) {
 
         StreamObserver<FetchRequest> serverStream = this.pubSubAsyncStub.subscribe(this.responseStreamObserver);
-        FetchRequest.Builder fetchRequestBuilder = FetchRequest.newBuilder()
-                .setNumRequested(10)
-                .setTopicName("/event/TestEvent__e")
-                .setReplayPreset(ReplayPreset.EARLIEST); // ReplayPreset.EARLIEST = -2  otherwise ReplayPreset.LATEST
-        serverStream.onNext(fetchRequestBuilder.build());
-
-        System.out.println("YOU HAVE X SECONDS ");
-        waitInMillis(10000);
+        this.listenToShutdown();
+        while(this.keepAlive) {
+            waitInMillis(1000);
+            FetchRequest.Builder fetchRequestBuilder = FetchRequest.newBuilder()
+            .setNumRequested(10)
+            .setTopicName(eventName)
+            .setReplayPreset(ReplayPreset.EARLIEST); // ReplayPreset.EARLIEST = -2  otherwise ReplayPreset.LATEST
+            serverStream.onNext(fetchRequestBuilder.build());
+        }
     }
 
-    public void setTopicInfo() {
-        TopicInfo topicInfo = this.pubSubBlockingStub.getTopic(TopicRequest.newBuilder().setTopicName("/event/TestEvent__e").build());
-        topicInfo.getAllFields().entrySet().forEach(item -> {
-       //     System.out.println(item.getValue());
+    public void listenToShutdown() {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+              System.err.println("shutting down GRPC Client");
+              PubSubGRPCClient.this.keepAlive = false;
+            }
         });
     }
+
 }

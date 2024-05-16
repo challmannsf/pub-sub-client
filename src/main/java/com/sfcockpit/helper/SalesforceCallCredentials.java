@@ -33,7 +33,6 @@ public class SalesforceCallCredentials extends CallCredentials {
         headers.put(accessTokenKey, this.accessToken);
         headers.put(tenantId, this.tenantId);
         applier.apply(headers);
-        System.out.println("calling applyRequestMetadata");
     }
 
 }
