@@ -14,7 +14,7 @@
         <grpc.version>1.63.0</grpc.version><!-- CURRENT_GRPC_VERSION -->
         <protobuf.version>3.25.1</protobuf.version>
         <protoc.version>3.25.1</protoc.version>
-        <avro.version>1.11.0</avro.version>
+        <avro.version>1.11.3</avro.version>
     </properties>
 
     <dependencies>
@@ -105,20 +105,30 @@
               </execution>
             </executions>
           </plugin>
+    
+
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-enforcer-plugin</artifactId>
-            <version>1.4.1</version>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>3.3.0</version>
             <executions>
               <execution>
-                <id>enforce</id>
+                <phase>package</phase>
                 <goals>
-                  <goal>enforce</goal>
+                  <goal>shade</goal>
                 </goals>
                 <configuration>
-                  <rules>
-                    <requireUpperBoundDeps/>
-                  </rules>
+                  <createDependencyReducedPom>false</createDependencyReducedPom>
+                  <transformers>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                      <mainClass>com.sfcockpit.Main</mainClass>
+                      <manifestEntries>
+                        <Implementation-Version>${version}</Implementation-Version>
+                        <Main-Class>com.sfcockpit.Main</Main-Class>
+                      </manifestEntries>
+                    </transformer>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                  </transformers>
                 </configuration>
               </execution>
             </executions>
