@@ -1,6 +1,6 @@
 # Pub Sub Client
 
-This repository provides a sample Client for Subscribing to the Salesforce Pub Sub API. 
+This repository provides a sample Client for subscribing to the Salesforce Pub Sub API. 
 It is intended for working during development but not tested for production use-cases
 
 The package supports Salesforce [OAuth Client - Credentials Flows](https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_client_credentials_flow.htm&language=en_US&type=5) as the only authentication mechanism. 
